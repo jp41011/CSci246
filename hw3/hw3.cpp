@@ -4,11 +4,8 @@
  Author      : Juan Pedraza - 10/2/16
  Description : CSci 246 - Computer Architecture - HW 3
 	Build a simulator for the Booth’s 2’s complement number multiplier.
-	In this practice, we use 16-bit operands for the multiplication, i.e., 16-bit multiplicand, 16-bit multiplier,
-	and 32-bit product.
-	The baseline simulation granurarity is 1-bit ALU component, which we discussed in class, and your
-	simulator should include the following components: 1-bit_ALU, 16-bit_ALU, 16-bit Booth’s multiplier,
-	and the main driver.
+	Will have to implement 1-bit ALU, 16-bit ALU (w/ overflow detection), 16-bit Booth's multiplier.
+	Will read in the inputs from an input file.
 ============================================================================
 */
 
@@ -21,9 +18,10 @@ using namespace std;
 //#define BITLENGTH 16 // max number of bits
 short const BITLENGTH = 16;
 
+// forward declarations
 void ALU1Bit(char, char, char, char, char&, char&);
 void ALU16Bit(string, string, char, string&, bool&);
-short twosCompliment(short);
+short flipBits(short);
 bool isOverflow(string, string, string, char);
 string boothsMultiplier(string, string);
 void printVar(int, string, string, string, char);
@@ -35,6 +33,7 @@ int main() {
 
 	ifstream inFile(fileName.c_str()); // open file
 
+	//initialize
 	string val1 = "";
 	string val2 = "";
 
@@ -44,21 +43,26 @@ int main() {
 	cout << "Value 1: " << val1 << endl << "Value 2: " << val2 << endl;
 
 
-	string product = boothsMultiplier(val1, val2);
+	string product = boothsMultiplier(val1, val2); // call Booth's Multiplier function and store result
 
-	cout << "Product: " << product << endl;
+	cout << "Product: " << product << endl; // display product
 
 	inFile.close();
 	cout << "*** Program End ***" << endl;
 	return 0;
 }
 
-// given a number (bitwise) negate the bits and add 1
-short twosCompliment(short in)
+/* flipBits(short in)
+Input:
+	short in - number (1 bit) that will be flipped
+Output:
+	short in - number whos bits have been negated and all but the right most bit have been masked.
+*/
+short flipBits(short in)
 {
 	in = ~in; // flip the bits
 	in = in & 1; // keep right most bit
-	return in; //TODO come back to he line before this
+	return in;
 }
 
 /*
@@ -70,6 +74,7 @@ short twosCompliment(short in)
  *	op = operation bit (0 = add, 1 = sub)
  *	result = 1 bit to store the result
  *	carryOut = 1 bit to store the carry out
+ * Notes: result and carryOut will be use instead of returning a struct with values
  */
 void ALU1Bit(char ai, char bi, char ci, char op, char& result, char& carryOut)
 {
@@ -83,13 +88,14 @@ void ALU1Bit(char ai, char bi, char ci, char op, char& result, char& carryOut)
 
 	if(op == '1') // subtract
 	{
-		bt = twosCompliment(bt); // can do that by adding the 2's compliment of the positive number
+		bt = flipBits(bt); // can do that by adding the 2's compliment of the number
 	}
 	//now continue to the addition
 
 	rt = at ^ bt ^ ct; // draw out table to see that this is true for all possible cases where result would 1
 	cot = (at & bt) | (at & ct) | (bt & ct); // there is a carry out if there are at least 2 one bits
 
+	//store results in the output parameters
 	result = (rt == 1 ? '1' : '0');
 	carryOut = (cot == 1 ? '1' : '0');
 
@@ -97,7 +103,18 @@ void ALU1Bit(char ai, char bi, char ci, char op, char& result, char& carryOut)
 }
 
 /*
- * TODO
+void ALU16Bit(string val1, string val2, char op, string& result, bool& overflow)
+Input: 
+	string val1 - a number represented as a string of bits (binary representation)
+	string val2 - 2nd number represented as a string of bits (binary representation)
+	char op - represents the operation. 0 = addition, 1 = subtraction
+	string& result - where the result of the operation will be stored
+	bool& overflow - if operation results in overflow will set this to 1 otherwise set to 0
+Output: 
+	using "result" and "overflow" parameters to return data
+Notes:
+	This function will take in the binary representation of 2 numbers and will then do the bitwise addition or subtraction
+	of the bits via calls to ALU1bit(...)
  */
 void ALU16Bit(string val1, string val2, char op, string& result, bool& overflow)
 {
@@ -128,8 +145,20 @@ void ALU16Bit(string val1, string val2, char op, string& result, bool& overflow)
 	return;
 }
 
-/* TODO
- *
+/*
+bool isOverflow(string val1, string val2, string result, char op)
+Input: 
+	string val1 - 1st operand
+	string val2 - 2nd operand
+	string result - result of the operation on the 2 operands
+	char op - operation that was performed. 0 = addition, 1 = subtraction
+Output:
+	true - if there was overflow
+	false - if there was NOT overflow
+Notes:
+	Addition case - if the 2 operands have the same sign and the result has the opposite sign then there was overflow
+		- operands have different signs then no overflow possible
+	Subtraction case - can be converted to the addition case by multi -1 to the 2nd operand and then follow the Addiction case
  */
 bool isOverflow(string val1, string val2, string result, char op)
 {
@@ -157,8 +186,15 @@ bool isOverflow(string val1, string val2, string result, char op)
 	return false;
 }
 
-/* TODO
- *
+/*
+string boothsMultiplier(string multiplier, string multiplicand)
+Input: 
+	string multiplier - multiplier number represented as a string of bits (binary 2's complement)
+	string multiplicand - multiplicand number represented as a string of bits (binary 2's complement)
+Output:
+	string - representing the product of the to operands
+Notes: 
+	performs booth's multiplier and prints out the steps along the way.
  */
 string boothsMultiplier(string multiplier, string multiplicand)
 {
@@ -171,10 +207,11 @@ string boothsMultiplier(string multiplier, string multiplicand)
 
 	//print out table header
 	cout << "Counter\t\tMD\t\t\t\tAC\t\t\t\tMQ\t\t\t\tMQ-1" << endl;
-	printVar(BITLENGTH-1, md, ac, mq, d0);
 
 	for(int i=BITLENGTH-1; i >= 0; i--)
 	{
+		printVar(i, md, ac, mq, d0);
+
 		char d1 = mq[mq.length()-1]; // get the right most bit
 		bool isOverflow = false; // temp
 
@@ -209,13 +246,15 @@ string boothsMultiplier(string multiplier, string multiplicand)
 }
 
 
-/* TODO
- *
+/*
+void printVar(int counter, string md, string ac, string mq, char d0)
+Inputs:
+	values that will be printed out in a formatted way.
  */
 void printVar(int counter, string md, string ac, string mq, char d0)
 {
-	//string counterBinary = bitset<64>(counter).to_string();
-	cout << counter << "\t"
+	string counterBinary = bitset<4>(counter).to_string();
+	cout << counterBinary << "\t"
 			<< md << "\t\t"
 			<< ac << "\t\t"
 			<< mq << "\t\t\t"
