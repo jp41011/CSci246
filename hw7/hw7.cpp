@@ -20,12 +20,15 @@
 		- 01 = shared
 		- 10 = dirty / modified
 
+Notes:
+	* lw $rt, offset($rs)
 ============================================================================
 */
 
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <bitset>
 
 using namespace std;
 
@@ -33,21 +36,32 @@ using namespace std;
 ofstream outFile;
 ifstream inFile;
 
-void getNextInstruction(short&, short&, short&, short&, short&, int&);
+void getNextInstruction(string, string, short&, short&, short&, short&, short&, int&);
 
 int main() {
 	cout << "==== Start ====" << endl;
 	//cout << "101: " << stoi("101", nullptr, 2) << endl;
+
+	/* convert int to binary
+	string tbin = bitset<32>(8).to_string();
+	cout << tbin << endl;
+	return 0;
+	*/
+
 	outFile.open("output.txt");
 	inFile.open("input.txt");
 
 	short nodeID, cpuID, instrID, rs, rt;
 	int offset;
 
-	getNextInstruction(nodeID, cpuID, instrID, rs, rt, offset);
-	getNextInstruction(nodeID, cpuID, instrID, rs, rt, offset);
-	getNextInstruction(nodeID, cpuID, instrID, rs, rt, offset);
-	getNextInstruction(nodeID, cpuID, instrID, rs, rt, offset);
+	string str1, str2;
+	while(inFile >> str1) // read in the first part of the line
+	{
+		inFile >> str2; // read in the rest of the line
+		getNextInstruction(str1, str2, nodeID, cpuID, instrID, rs, rt, offset);
+		cout << nodeID << "\t" << cpuID << "\t" << instrID << "\t" << rs << "\t" << rt << "\t" << offset << endl;
+	}
+
 
 	outFile.close();
 	inFile.close();
@@ -57,16 +71,18 @@ int main() {
 
 // This instruction gets the next MIPS instruction from the file and decodes it
 // passing the values back by reference
-void getNextInstruction(short& outNodeID, short& outCpuID, short& outInstrID, short& outRS, short& outRT, int& outOffset)
+// str1 and str2 given (read from file before calling this function
+void getNextInstruction(string str1, string str2, short& outNodeID, short& outCpuID, short& outInstrID, short& outRS, short& outRT, int& outOffset)
 {
+	/*
 	string str1, str2; // str1 = node and cpu id, str2 = MIPS instruction
 	inFile >> str1; // get the node and cpu
 	inFile >> str2; // get the rest, MIPS instruction
-
+	*/
 	//remove trailing ':' from str1
-	cout << str1 << endl;
+	//cout << str1 << endl;
 	str1 = str1.substr(0, str1.length()-1);
-	cout << str1 << endl;
+	//cout << str1 << endl;
 
 	// 2 left most bits = node
 	string strNode = str1.substr(0,2);
@@ -91,9 +107,15 @@ void getNextInstruction(short& outNodeID, short& outCpuID, short& outInstrID, sh
 
 	outRS = stoi(rs, nullptr, 2);
 	outRT = stoi(rt, nullptr, 2);
+	// outRS and outRT are 17 or 18 for registers 1 or 2 ... change them to 1 or 2
+	if(outRS != 0)
+		outRS -= 16;
+	if(outRT != 0)
+		outRT -= 16;
+
 	outOffset = stoi(offset, nullptr, 2);
 
-	cout << op << "\t" << rs << "\t" << rt << "\t" << offset << endl;
+	//cout << op << "\t" << rs << "\t" << rt << "\t" << offset << endl;
 
 	//cout << strNode << endl << strCPU << endl;
 
