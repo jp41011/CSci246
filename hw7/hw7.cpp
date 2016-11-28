@@ -26,17 +26,39 @@ Notes:
 */
 
 #include <iostream>
+#include <vector>
 #include <string>
 #include <fstream>
 #include <bitset>
+#include "SMPNode.h"
 
 using namespace std;
+
+// clock costs
+#define LocalCacheCost 1;
+#define LocalCPUCost 30;
+#define LocalMemCost 100;
+#define RemoteNodeCost 135;
 
 // Global variables for file streams
 ofstream outFile;
 ifstream inFile;
 
+// vector of nodes
+vector<SMPNode> nodes;
+
+// current running total cost
+int curCost = 0;
+int instrCount = 0; // instruction count to calculate average clock cost
+
+// get the next instruction from file and decode info
 void getNextInstruction(string, string, short&, short&, short&, short&, short&, int&);
+
+// execute instruction
+void executeInstruction(short, short, short, short, short, int);
+
+// print summary of data in all nodes
+void printNodesSummary();
 
 int main() {
 	cout << "==== Start ====" << endl;
@@ -47,6 +69,14 @@ int main() {
 	cout << tbin << endl;
 	return 0;
 	*/
+
+	for(int i=0; i<4; i++)
+	{
+		SMPNode tempNode(i);
+		nodes.push_back(tempNode);
+	}
+
+	printNodesSummary();
 
 	outFile.open("output.txt");
 	inFile.open("input.txt");
@@ -59,7 +89,10 @@ int main() {
 	{
 		inFile >> str2; // read in the rest of the line
 		getNextInstruction(str1, str2, nodeID, cpuID, instrID, rs, rt, offset);
-		cout << nodeID << "\t" << cpuID << "\t" << instrID << "\t" << rs << "\t" << rt << "\t" << offset << endl;
+		//cout << nodeID << "\t" << cpuID << "\t" << instrID << "\t" << rs << "\t" << rt << "\t" << offset << endl;
+		executeInstruction(nodeID, cpuID, instrID, rs, rt, offset);
+		printNodesSummary();
+		//break; // debug
 	}
 
 
@@ -74,6 +107,8 @@ int main() {
 // str1 and str2 given (read from file before calling this function
 void getNextInstruction(string str1, string str2, short& outNodeID, short& outCpuID, short& outInstrID, short& outRS, short& outRT, int& outOffset)
 {
+	cout << "=========================" << endl;
+	cout << "Instruction: " << str1 << " " << str2 << endl;
 	/*
 	string str1, str2; // str1 = node and cpu id, str2 = MIPS instruction
 	inFile >> str1; // get the node and cpu
@@ -120,4 +155,49 @@ void getNextInstruction(string str1, string str2, short& outNodeID, short& outCp
 	//cout << strNode << endl << strCPU << endl;
 
 	return;
+}
+
+// execute instruction
+void executeInstruction(short nodeID, short cpuID, short instrID, short rs, short rt, int offset)
+{
+	int byteOffset = offset/4;
+	string binaryOffset = bitset<6>(byteOffset).to_string();
+	string tagSTR = binaryOffset.substr(0,4);
+	string indexSTR = binaryOffset.substr(4);
+
+	int tag = stoi(tagSTR, nullptr, 2);
+	int index = stoi(indexSTR, nullptr, 2);
+
+	cout << "node: " << nodeID << "\tcpu: " << cpuID << endl;
+	cout << "tag: " << tag << "\t index: " << index << endl;
+	cout << "rt: " << rt << "\t rs: " << rs << endl;
+
+	if(instrID == 1) // load word
+	{
+		int loadValue = 0; // value to be loaded
+		int tempCost = 0; // cost to find
+		if(nodes[nodeID].loadWord(cpuID, tag, index, loadValue, tempCost) == true)
+		{ // found in the node
+			curCost += tempCost;
+		}else // did not find in 1st node have to check other nodes
+		{
+
+		}
+
+	}else if (instrID == 2) // store word
+	{
+
+	}else{ // error
+		cout << "InValid Instruction" << endl;
+	}
+
+}
+
+// print summary of data in all nodes
+void printNodesSummary()
+{
+	// print out summary
+	for(unsigned int i=0; i < nodes.size(); i++)
+		nodes[i].printSummary();
+
 }
