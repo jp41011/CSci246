@@ -41,7 +41,7 @@ using namespace std;
 #define RemoteNodeCost 135;
 
 // Global variables for file streams
-ofstream outFile;
+//ofstream outFile;
 ifstream inFile;
 
 // vector of nodes
@@ -78,7 +78,7 @@ int main() {
 
 	printNodesSummary();
 
-	outFile.open("output.txt");
+	//outFile.open("output.txt");
 	inFile.open("input.txt");
 
 	short nodeID, cpuID, instrID, rs, rt;
@@ -91,12 +91,19 @@ int main() {
 		getNextInstruction(str1, str2, nodeID, cpuID, instrID, rs, rt, offset);
 		//cout << nodeID << "\t" << cpuID << "\t" << instrID << "\t" << rs << "\t" << rt << "\t" << offset << endl;
 		executeInstruction(nodeID, cpuID, instrID, rs, rt, offset);
+		instrCount++;
 		printNodesSummary();
 		//break; // debug
 	}
 
+	// print end of program summary stats
+	cout << "--------------------" << endl;
+	cout << "Total Cost: " << curCost
+			<< "\t Instr Count: " << instrCount
+			<< "\t Avg Cost: " << double(curCost) / double(instrCount)
+			<< endl;
 
-	outFile.close();
+	//outFile.close();
 	inFile.close();
 	cout << "==== End ====" << endl;
 	return 0;
@@ -179,9 +186,10 @@ void executeInstruction(short nodeID, short cpuID, short instrID, short rs, shor
 		if(nodes[nodeID].loadWord(cpuID, tag, index, loadValue, tempCost) == true)
 		{ // found in the node
 			curCost += tempCost;
+			nodes[nodeID].storeWord(cpuID, tag, index, loadValue);
 		}else // did not find in 1st node have to check other nodes
 		{
-
+			curCost += 135;
 		}
 
 	}else if (instrID == 2) // store word

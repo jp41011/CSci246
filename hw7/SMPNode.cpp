@@ -31,7 +31,7 @@ void SMPNode::printSummary() {
 	for(int i=0; i<cpu.size(); i++)
 		cpu[i].printSummary();
 	// print mem
-	cout << "\tIndex\tMemory\t\t\t\t\tDirectory" << endl;
+	cout << "\tIndex\tMemory\t\t\t\t\t\t\tDirectory" << endl;
 	for(int i=0; i < memory.size(); i++)
 	{
 		cout << "\t" << memory[i].index
@@ -101,6 +101,13 @@ bool SMPNode::loadFromMemory(int index, int& loadValue)
 		return true;
 	}else
 		return false;
+}
+
+// store word into cpu cache
+void SMPNode::storeWord(short cpuID, int tag, int index, int loadValue)
+{
+	cpu[cpuID].storeWord(tag, index, loadValue);
+	return;
 }
 
 SMPNode::~SMPNode() {

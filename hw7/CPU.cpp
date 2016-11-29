@@ -22,13 +22,13 @@ void CPU::printSummary(){
 
 	cout << "\t\tCache:" << endl;
 
-	cout << "\t\tIndex\tValid\tTag\tValue" << endl;
+	cout << "\t\tIndex\tValid\tTag\t\tValue" << endl;
 
 	for(unsigned int i=0; i < cache.size(); i++)
 	{
 		cout << "\t\t " << i
-				<< "\t" << (cache[i].isValid ? "1" : "0")
-				<< "\t" << bitset<4>(cache[i].tag)
+				<< "\t\t" << (cache[i].isValid ? "1" : "0")
+				<< "\t\t" << bitset<4>(cache[i].tag)
 				<< "\t" << bitset<32>(cache[i].value)
 				<< endl;
 	}
@@ -44,6 +44,15 @@ bool CPU::loadWord(int tag, int index, int& loadValue)
 		return true;
 	}else
 		return false;
+}
+
+// store load value to the cache cpu
+void CPU::storeWord(int tag, int index, int loadValue)
+{
+	cache[index].isValid = true;
+	cache[index].tag = tag;
+	cache[index].value = loadValue;
+	return;
 }
 
 CPU::~CPU() {

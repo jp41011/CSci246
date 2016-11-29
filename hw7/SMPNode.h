@@ -26,6 +26,7 @@ public:
 	void printSummary();
 	bool loadWord(short, int, int, int&, int&);
 	bool loadFromMemory(int, int&);
+	void storeWord(short, int, int, int);
 	virtual ~SMPNode();
 };
 

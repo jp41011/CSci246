@@ -25,6 +25,7 @@ public:
 	CPU(short);
 	void printSummary();
 	bool loadWord(int, int, int&);
+	void storeWord(int, int, int);
 
 	virtual ~CPU();
 };
